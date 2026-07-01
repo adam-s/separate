@@ -23,9 +23,9 @@
 
   const SECTIONS = [
     { id: 'origin', title: 'How I got here' },
+    { id: 'live', title: 'It runs in your browser' },
     { id: 'tools', title: 'The tools for the job' },
     { id: 'file', title: 'Pick a real recording' },
-    { id: 'live', title: 'It runs in your browser' },
     { id: 'run', title: 'Run it on your clip' },
     { id: 'extract', title: 'Group, and keep the engine' },
     { id: 'target', title: 'The engine, alone' },
@@ -247,30 +247,29 @@
         </FigureCard>
       {:else if s.id === 'live' && data}
         <p>
-          Everything on this page so far — the spectrogram, the filters, the recognizer —
-          was computed ahead of time, so the walkthrough works on any device. But the
-          recognizer is a real neural network, and there's no reason it has to run on a
-          server. You can run it right here, on your own machine. If you'd like to see what
-          that's like, this is the place.
+          One choice up front, and it shapes everything below. This whole pipeline can run
+          on your own machine — no server, nothing uploaded. By default the panels ahead
+          use values computed earlier, so the walkthrough works on any device. But the
+          recognizer is a real neural network, and there's no reason it has to sit on a
+          server: download it once and it runs live, right here, on your hardware.
         </p>
         <p>
-          The model is <strong>AST</strong>, the Audio Spectrogram Transformer — the same
-          weights the precomputed panels came from, published on
+          That model is <strong>AST</strong>, the Audio Spectrogram Transformer, published
+          on
           <a href="https://huggingface.co/Xenova/ast-finetuned-audioset-10-10-0.4593">Hugging Face</a>
-          and trained on Google's AudioSet to know 500-plus everyday sounds.
+          and trained on Google's AudioSet to recognize 500-plus everyday sounds.
           <a href="https://github.com/huggingface/transformers.js">transformers.js</a>
           loads it straight into this page, and <strong>WebGPU</strong> hands the matrix
           math to your graphics chip. It downloads once (~{recognizer.sizeMb} MB), caches
-          in your browser so the next visit is instant and works offline, and the audio
+          in your browser so the next visit is instant and works offline, and your audio
           never leaves the page — nothing to upload, no server to call.
         </p>
         <FigureCard label="Your device">
           <DevicePanel />
         </FigureCard>
         <p>
-          Load it, then slide it across your clip. The per-slice scores it computes — your
-          GPU's own numbers — take over the recognizer panel further down, so the same
-          visualization runs live. You can flip back to the precomputed values anytime.
+          Load it below. Further down, the recognizer's per-slice call then runs on your
+          GPU instead of from a file — and you can flip between the two whenever you like.
         </p>
         <FigureCard
           label="The recognizer · live"
