@@ -1,6 +1,7 @@
 <script lang="ts">
   import { loadClip, loadClips, type ClipData, type ClipInfo } from './lib/data';
   import { Transport } from './lib/audio/transport.svelte';
+  import { recognizer } from './lib/audio/recognizer.svelte';
   import ClipPicker from './lib/components/ClipPicker.svelte';
   import Hero from './lib/components/Hero.svelte';
   import Section from './lib/components/Section.svelte';
@@ -27,7 +28,6 @@
     { id: 'run', title: 'Run it on your clip' },
     { id: 'extract', title: 'Group, and keep the engine' },
     { id: 'target', title: 'The engine, alone' },
-    { id: 'browser', title: 'It runs in your browser' },
   ];
 
   let clips = $state<ClipInfo[]>([]);
@@ -250,16 +250,41 @@
           move together on one timeline: the sound as a picture, the two cheap filters,
           and the recognizer's per-slice call.
         </p>
-        <FigureCard label="The sound as a picture · spectrogram">
+        <FigureCard label="The sound as a picture · spectrogram" badge="precomputed">
           <MelSpectrogram {data} {transport} />
         </FigureCard>
-        <FigureCard label="The cheap filters · energy + flatness">
+        <FigureCard label="The cheap filters · energy + flatness" badge="precomputed">
           <FilterTraces {data} {transport} />
         </FigureCard>
-        <FigureCard label="The recognizer · per-slice class">
+        <FigureCard label="The recognizer · per-slice class" badge="precomputed">
           <AstRibbon {data} {transport} />
         </FigureCard>
         <PlaybackControls {transport} />
+
+        <p>
+          Those three panels are <strong>precomputed</strong>, so the walkthrough works on
+          any device. But the recognizer is a real model, and there's no reason it has to
+          run on a server — you can run it right here. On a capable machine, download it
+          once and the very same recognizer runs live on the clip you picked: the math
+          runs on your own graphics chip through WebGPU, and the audio never leaves the
+          page. Watch the <strong>live</strong> badge below — those predictions are
+          computed on your device the moment you press the button, not read from a file.
+        </p>
+        {#if capable}
+          <FigureCard label="Your device">
+            <DevicePanel />
+          </FigureCard>
+        {/if}
+        <FigureCard
+          label="The recognizer · live"
+          badge={recognizer.status === 'ready' ? `live · ${recognizer.backend}` : 'live · your browser'}
+          badgeTone="live"
+        >
+          <ModelLoader
+            audioUrl={data?.audioUrl ? import.meta.env.BASE_URL + data.audioUrl : ''}
+            {capable}
+          />
+        </FigureCard>
       {:else if s.id === 'extract' && data}
         <p>
           The labels pay off here. Group every chunk by its class and each group becomes
@@ -276,30 +301,6 @@
         </p>
         <FigureCard label="Isolated engine · result">
           <EngineResult {data} />
-        </FigureCard>
-      {:else if s.id === 'browser'}
-        <p>
-          Everything so far ran from precomputed data, so the walkthrough works on any
-          device. But the recognizer is a real model, and there's no reason it has to run
-          on a server, you can run it right here.
-        </p>
-        <p>
-          Here's what that means. The first time you ask for it, the model file
-          downloads once (about 90 MB) and is saved in your browser's cache. From then on
-          it loads instantly and works offline. The math runs on your own graphics chip
-          through WebGPU, so the audio never leaves the page, there's nothing to upload
-          and no server to call. The catch is the first download and the memory it needs,
-          which is why it's opt-in and best on a desktop.
-        </p>
-        <FigureCard label="Your device">
-          <DevicePanel />
-        </FigureCard>
-        <p>
-          So: download it once, then run the very same recognizer you read about above on
-          the clip you picked, live.
-        </p>
-        <FigureCard label="The recognizer · live">
-          <ModelLoader audioUrl={data?.audioUrl ? import.meta.env.BASE_URL + data.audioUrl : ''} {capable} />
         </FigureCard>
       {/if}
     </Section>

@@ -24,8 +24,8 @@
 <div class="loader">
   {#if !capable}
     <p class="note">
-      The live model runs on desktop Chrome or Edge (it needs WebGPU). On this device
-      you've seen the full precomputed walkthrough, which covers the whole method.
+      Running the model live needs a desktop with WebGPU (Chrome or Edge). On this device
+      the panels above are precomputed — they cover the whole method regardless.
     </p>
   {:else if recognizer.status === 'idle'}
     <button class="go" onclick={() => recognizer.load()}>
@@ -47,7 +47,7 @@
     </ul>
     <p class="hint">Downloading on the {recognizer.backend} backend. Cached after this, so the next visit is instant.</p>
   {:else if recognizer.status === 'ready'}
-    <p class="ready">✓ Loaded · running on {recognizer.backend}. The model is now on your device.</p>
+    <p class="ready">✓ Loaded · running on {recognizer.backend}, on your device. Nothing you run here is uploaded.</p>
     <button class="go" onclick={analyze} disabled={analyzing || !audioUrl}>
       {analyzing ? 'Listening…' : '▶ Run it on this clip'}
     </button>
@@ -61,7 +61,10 @@
           </li>
         {/each}
       </ul>
-      <p class="hint">Raw AudioSet predictions, straight from the model running in this page just now.</p>
+      <p class="hint">
+        Live predictions — the raw AudioSet classes, computed on your device just now,
+        not read from a precomputed file like the panels above.
+      </p>
     {/if}
   {:else if recognizer.status === 'error'}
     <p class="note">Couldn't load the model: {recognizer.error}</p>
