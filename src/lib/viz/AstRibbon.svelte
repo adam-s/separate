@@ -1,19 +1,13 @@
 <script lang="ts">
-  import type { ClipData, Frame } from '../data';
+  import type { ClipData } from '../data';
   import { LABEL_COLORS } from '../data';
   import type { Transport } from '../audio/transport.svelte';
 
-  // `liveFrames`, when present, are the per-slice scores the reader just computed on their
-  // own GPU; they replace the precomputed ones so the same ribbon runs live.
-  let {
-    data,
-    transport,
-    liveFrames,
-  }: { data: ClipData; transport: Transport; liveFrames?: Frame[] } = $props();
+  let { data, transport }: { data: ClipData; transport: Transport } = $props();
 
   const W = 1000;
   const H = 120;
-  const frames = $derived(liveFrames ?? data.frames);
+  const frames = $derived(data.frames);
   const bw = $derived(frames.length ? W / frames.length : W);
   const x = (t: number) => (data.durationSec ? (t / data.durationSec) * W : 0);
   const playX = $derived(x(transport.t));

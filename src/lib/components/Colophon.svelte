@@ -1,18 +1,8 @@
-<script lang="ts">
-  let { capable }: { capable: boolean } = $props();
-</script>
-
 <footer class="colophon">
   <p>
-    Built with Svelte, d3, and transformers.js. Models run on your device via WebGPU;
-    nothing you record leaves the browser.
+    Built with Svelte and d3. The walkthrough runs from precomputed data, right in your
+    browser. The audio labeling that produced that data is done offline (see the repo).
   </p>
-  {#if !capable}
-    <p class="note">
-      The live in-browser model runs on desktop Chrome or Edge. On this device you're
-      seeing the precomputed walkthrough.
-    </p>
-  {/if}
   <p class="note">
     Demo music: <a href="https://incompetech.com/">“Dance Monster” by Kevin MacLeod</a>,
     licensed <a href="https://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.

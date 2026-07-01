@@ -1,7 +1,6 @@
 <script lang="ts">
   import { loadClip, loadClips, type ClipData, type ClipInfo } from './lib/data';
   import { Transport } from './lib/audio/transport.svelte';
-  import { recognizer } from './lib/audio/recognizer.svelte';
   import ClipPicker from './lib/components/ClipPicker.svelte';
   import Hero from './lib/components/Hero.svelte';
   import Section from './lib/components/Section.svelte';
@@ -16,14 +15,11 @@
   import AstRibbon from './lib/viz/AstRibbon.svelte';
   import StemExtraction from './lib/viz/StemExtraction.svelte';
   import EngineResult from './lib/viz/EngineResult.svelte';
-  import DevicePanel from './lib/components/DevicePanel.svelte';
-  import ModelLoader from './lib/components/ModelLoader.svelte';
   import FooterBar from './lib/components/FooterBar.svelte';
   import PlaybackControls from './lib/viz/PlaybackControls.svelte';
 
   const SECTIONS = [
     { id: 'origin', title: 'How I got here' },
-    { id: 'live', title: 'It runs in your browser' },
     { id: 'tools', title: 'The tools for the job' },
     { id: 'file', title: 'Pick a real recording' },
     { id: 'run', title: 'Run it on your clip' },
@@ -37,16 +33,6 @@
   let error = $state<string | null>(null);
   // One persistent transport = the single clock every visual reads from.
   const transport = new Transport();
-
-  // Capability gate: decides whether the live model is offered (a later iteration).
-  function detectCapable(): boolean {
-    if (typeof navigator === 'undefined') return false;
-    const hasWebGPU = 'gpu' in navigator;
-    const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-    const mem = (navigator as { deviceMemory?: number }).deviceMemory ?? 8;
-    return hasWebGPU && !isMobile && mem >= 4;
-  }
-  const capable = detectCapable();
 
   // Load the clip index, default to the first.
   $effect(() => {
@@ -121,8 +107,8 @@
           underneath. Each of those is its own step in the pipeline.
         </p>
         <p>
-          That cleaning step is what this post is about. It's more interesting than it
-          sounds, and it runs entirely in your browser. (It's the front end of
+          That cleaning step is what this post is about, walked through stage by stage.
+          It's more interesting than it sounds. (It's the front end of
           <a href="https://github.com/adam-s/car-diagnosis">car-diagnosis</a>.)
         </p>
         <div class="alsosee">
@@ -195,8 +181,8 @@
         <p>
           Those categories already include Speech, Music, and Engine, the three we care
           about. So we slide AST across the clip and, slice by slice, it scores how much
-          each moment sounds like each one. It's small enough (about 90 MB) to download
-          once and run on your computer's graphics chip, right in the browser.
+          each moment sounds like each one. It's small enough (about 90 MB) that we run it
+          offline, ahead of time, to label every clip in this post.
           <a href="https://research.google.com/audioset/">Browse the AudioSet categories →</a>
         </p>
         <ToolDemo kind="ast" {data} {transport} caption="Speech / music / engine scores — the average when paused, the live slice while playing; the tallest bar is the model's call." />
@@ -210,28 +196,18 @@
           <a href="https://en.wikipedia.org/wiki/Voice_activity_detection">What voice-activity detection is →</a>
         </p>
         <ToolDemo kind="vad" {data} {transport} caption="The waveform with detected speech highlighted; press play and the marker tracks the clock." />
-
-        <h3 data-stage>transformers.js + WebGPU — run it in the browser</h3>
-        <p>
-          None of this needs a server. transformers.js is a JavaScript library that runs
-          AI models right inside a web page, and WebGPU is the browser feature that lets a
-          page borrow your computer's graphics chip for the heavy math. Together they
-          download each model once, cache it so the next visit is instant, and run
-          everything on your own machine, so the audio you feed in never leaves the page.
-          <a href="https://huggingface.co/blog/transformersjs-v3">How transformers.js runs on WebGPU →</a>
-        </p>
         </div>
 
         <p>
-          Every piece is small enough to run on your own machine. The rest of this shows
-          them working together on the clip above.
+          Each piece is small and cheap — cheap enough to label thousands of clips
+          offline. The rest of this shows them working together on the clip you pick.
         </p>
       {:else if s.id === 'file' && data && transport}
         <p>
           These are real clips, each a snippet from a YouTube video of someone diagnosing a
           car by ear: narration over the actual fault. (The last one has a music track mixed
           in, so the "drop the music" step has something to drop.) Pick one and the rest of
-          the page analyzes it live, in your browser. Every card links back to the original.
+          the page walks through it. Every card links back to the original.
         </p>
         <ClipPicker {clips} active={activeSlug} onpick={(s) => (activeSlug = s)} />
         <FigureCard label="The recording · press play">
@@ -245,46 +221,6 @@
         <FigureCard label="The plan · sort, then keep one group">
           <SortHero />
         </FigureCard>
-      {:else if s.id === 'live' && data}
-        <p>
-          One choice up front, and it shapes everything below. This whole pipeline can run
-          on your own machine — no server, nothing uploaded. By default the panels ahead
-          use values computed earlier, so the walkthrough works on any device. But the
-          recognizer is a real neural network, and there's no reason it has to sit on a
-          server: download it once and it runs live, right here, on your hardware.
-        </p>
-        <p>
-          That model is <strong>AST</strong>, the Audio Spectrogram Transformer, published
-          on
-          <a href="https://huggingface.co/Xenova/ast-finetuned-audioset-10-10-0.4593">Hugging Face</a>
-          and trained on Google's AudioSet to recognize 500-plus everyday sounds.
-          <a href="https://github.com/huggingface/transformers.js">transformers.js</a>
-          loads it straight into this page, and <strong>WebGPU</strong> hands the matrix
-          math to your graphics chip. It downloads once (~{recognizer.sizeMb} MB), caches
-          in your browser so the next visit is instant and works offline, and your audio
-          never leaves the page — nothing to upload, no server to call.
-        </p>
-        <FigureCard label="Your device">
-          <DevicePanel />
-        </FigureCard>
-        <p>
-          Load it below. Further down, the recognizer's per-slice call then runs on your
-          GPU instead of from a file — and you can flip between the two whenever you like.
-        </p>
-        <FigureCard
-          label="The recognizer · live"
-          badge={recognizer.winSlug === activeSlug && recognizer.status === 'ready'
-            ? `live · ${recognizer.backend}`
-            : 'live · your browser'}
-          badgeTone="live"
-        >
-          <ModelLoader
-            audioUrl={data?.audioUrl ? import.meta.env.BASE_URL + data.audioUrl : ''}
-            slug={activeSlug}
-            durationSec={data.durationSec}
-            {capable}
-          />
-        </FigureCard>
       {:else if s.id === 'run' && data && transport}
         <p>
           Now the whole pipeline on the clip you picked. Press play and watch the stages
@@ -297,13 +233,8 @@
         <FigureCard label="The cheap filters · energy + flatness">
           <FilterTraces {data} {transport} />
         </FigureCard>
-        {@const liveFrames = recognizer.liveFramesFor(activeSlug)}
-        <FigureCard
-          label="The recognizer · per-slice class"
-          badge={liveFrames ? `live · ${recognizer.backend}` : undefined}
-          badgeTone="live"
-        >
-          <AstRibbon {data} {transport} {liveFrames} />
+        <FigureCard label="The recognizer · per-slice class">
+          <AstRibbon {data} {transport} />
         </FigureCard>
         <PlaybackControls {transport} />
       {:else if s.id === 'extract' && data}
@@ -327,7 +258,7 @@
     </Section>
   {/each}
 
-  <Colophon {capable} />
+  <Colophon />
 </main>
 
 {#if clips.length}

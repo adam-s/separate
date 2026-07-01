@@ -1,9 +1,10 @@
 # Separate — Clean Mechanical Audio from Messy YouTube Data
 
-An interactive, in-browser data-viz post on pulling clean **engine/mechanical audio**
-out of messy YouTube clips — filtering out speech and music live, on your own GPU, to
-build training data for ML. Built with Svelte + Vite, running an audio model with
-[transformers.js](https://github.com/huggingface/transformers.js) on **WebGPU**.
+An interactive data-viz post on pulling clean **engine/mechanical audio** out of messy
+YouTube clips — filtering out speech and music, stage by stage, to build training data
+for ML. Built with Svelte + Vite. The walkthrough runs from precomputed analysis, so it
+works on any device; the audio model that produces that analysis runs **offline**, in
+the data-prep pipeline.
 
 Part of the adamsohn.com blog; ships to `blog/separate/`.
 
@@ -11,20 +12,20 @@ Part of the adamsohn.com blog; ships to `blog/separate/`.
 
 Car-diagnosis videos are a rich source of engine sounds — knocks, lifter ticks, wheel
 bearings, exhaust — but they're buried under narration and background music. This post
-shows how to separate the mechanical signal from the rest, in the browser, and turn raw
-YouTube audio into clean, labeled clips for training.
+shows how to separate the mechanical signal from the rest, and turn raw YouTube audio
+into clean, labeled clips for training.
 
 The reader can:
 
 - Watch a mel-spectrogram and per-class filter traces update as a clip plays.
-- See the model tag each moment (speech / music / engine) and extract per-class stems.
-- Run the live model on their own machine, or follow a precomputed walkthrough.
+- See how each moment is tagged (speech / music / engine) and how per-class stems are
+  extracted.
+- Pick from several real clips and play the isolated engine result.
 
 **Key concepts covered:**
 - Audio classification with the AST (Audio Spectrogram Transformer) model
-- Mel-spectrogram features and per-class filter traces
+- Mel-spectrogram features and per-class filter traces (energy + spectral flatness)
 - Span detection and per-class stem extraction
-- Running transformers.js models on WebGPU, with graceful capability fallbacks
 
 ## 🖥️ Running the post locally
 
@@ -47,32 +48,26 @@ Other scripts:
 
 ## 🎛️ How it works
 
-The live path loads an audio model via transformers.js and runs it entirely
-client-side on WebGPU — no audio leaves the browser. It's capability-gated (WebGPU +
-non-mobile + ≥ 4 GB); where the live model isn't a good fit, the post serves a
-**precomputed walkthrough** instead, so every reader gets the full experience.
+The app is entirely precomputed: every visualization reads from per-clip JSON, so nothing
+heavy loads at runtime and the walkthrough works on any device.
 
-**Data pipeline — `scripts/prepare_clips.py`:**
-Builds the clips the app serves. It labels each clip with the real AST model, computes
+**Data pipeline — `scripts/prepare_clips.py` (offline):**
+This is where the real audio model runs. It labels each clip with the AST model, computes
 features, builds spans + per-class stems, and writes:
 
-- `public/audio/*.wav` — the audio stems
+- `public/audio/*.mp3` — the clips and per-class stems the app plays
 - `public/data/<slug>.json` — per-clip analysis (shape defined in `src/lib/data.ts`)
 - `public/data/clips.json` — the clip index
 
 **Frontend — `src/`:**
-- `App.svelte` / `lib/components/` — post scaffold, hero, clip picker, model loader
-- `lib/viz/` — the visualizations: `MelSpectrogram`, `FilterTraces`, `StemExtraction`,
-  `AstRibbon`, `EngineResult`, and the playback surface
-- `lib/audio/` — `recognizer.svelte.ts` (the model) and `transport.svelte.ts` (playback)
+
+- `App.svelte` / `lib/components/` — post scaffold, hero, clip picker, playback surface
+- `lib/viz/` — the visualizations: `MelSpectrogram`, `FilterTraces`, `AstRibbon`,
+  `StemExtraction`, `EngineResult`
+- `lib/audio/transport.svelte.ts` — the shared playback clock
 - `lib/data.ts` — the clip/analysis data shapes
-
-## 📱 Mobile
-
-The precomputed walkthrough is the universal path. The live model is capability-gated;
-on devices that can't run it well, the download simply isn't offered.
 
 ---
 
-*An educational, interactive explainer — a sandbox for understanding how browser-based
-audio models can turn noisy real-world video into clean ML training data.*
+*An educational, interactive explainer — a sandbox for understanding how a small audio
+pipeline turns noisy real-world video into clean ML training data.*

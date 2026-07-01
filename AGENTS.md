@@ -1,7 +1,9 @@
 # separate — agent guide
 
-Svelte data-viz post: separating engine sound from speech and music in the browser
-(transformers.js + WebGPU). Part of the adamsohn.com blog; ships to `blog/separate/`.
+Svelte data-viz post: a walkthrough of separating engine sound from speech and music.
+The app is entirely precomputed (works on any device); the audio model that produces the
+data runs offline in `scripts/prepare_clips.py`. Part of the adamsohn.com blog; ships to
+`blog/separate/`.
 
 ## Visual iteration
 
@@ -24,11 +26,12 @@ Follow the anti-slop rules: be concrete, ration em-dashes, no filler. See
 ## Data
 
 `scripts/prepare_clips.py` builds the clips the app serves: it labels each clip with the
-real AST model, computes features, builds spans + per-class stems, and writes
-`public/audio/*.wav` + `public/data/<slug>.json` + the `public/data/clips.json` index
+real AST model (offline), computes features, builds spans + per-class stems, and writes
+`public/audio/*.mp3` + `public/data/<slug>.json` + the `public/data/clips.json` index
 (shape defined in `src/lib/data.ts`). Run it with the car-diagnosis venv.
 
-## Mobile
+## Precomputed only
 
-Precomputed walkthrough is the universal path. The live model is capability-gated
-(WebGPU + non-mobile + >=4 GB); where it's a problem, don't offer the download.
+The app ships no model and runs no inference in the browser — every visualization reads
+from the precomputed JSON, so it works on any device. If a change needs new numbers,
+regenerate the data with `prepare_clips.py`; don't add runtime model loading.
