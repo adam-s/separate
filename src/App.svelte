@@ -25,6 +25,7 @@
     { id: 'origin', title: 'How I got here' },
     { id: 'tools', title: 'The tools for the job' },
     { id: 'file', title: 'Pick a real recording' },
+    { id: 'live', title: 'It runs in your browser' },
     { id: 'run', title: 'Run it on your clip' },
     { id: 'extract', title: 'Group, and keep the engine' },
     { id: 'target', title: 'The engine, alone' },
@@ -244,6 +245,32 @@
         <FigureCard label="The plan · sort, then keep one group">
           <SortHero />
         </FigureCard>
+      {:else if s.id === 'live' && data}
+        <p>
+          You picked a clip. Before we take the pipeline apart stage by stage, run the
+          real thing. The recognizer is an actual neural network, and it doesn't need a
+          server: download it once — it caches in your browser — and it runs on your own
+          graphics chip through WebGPU. The audio never leaves the page, there's nothing
+          to upload and no server to call.
+        </p>
+        <FigureCard label="Your device">
+          <DevicePanel />
+        </FigureCard>
+        <p>
+          So load it, then run it on the clip you picked and watch the model's own call,
+          computed on your machine the moment you ask — not read from a file like the
+          panels that follow.
+        </p>
+        <FigureCard
+          label="The recognizer · live"
+          badge={recognizer.status === 'ready' ? `live · ${recognizer.backend}` : 'live · your browser'}
+          badgeTone="live"
+        >
+          <ModelLoader
+            audioUrl={data?.audioUrl ? import.meta.env.BASE_URL + data.audioUrl : ''}
+            {capable}
+          />
+        </FigureCard>
       {:else if s.id === 'run' && data && transport}
         <p>
           Now the whole pipeline on the clip you picked. Press play and watch the stages
@@ -260,31 +287,6 @@
           <AstRibbon {data} {transport} />
         </FigureCard>
         <PlaybackControls {transport} />
-
-        <p>
-          Those three panels are <strong>precomputed</strong>, so the walkthrough works on
-          any device. But the recognizer is a real model, and there's no reason it has to
-          run on a server — you can run it right here. On a capable machine, download it
-          once and the very same recognizer runs live on the clip you picked: the math
-          runs on your own graphics chip through WebGPU, and the audio never leaves the
-          page. Watch the <strong>live</strong> badge below — those predictions are
-          computed on your device the moment you press the button, not read from a file.
-        </p>
-        {#if capable}
-          <FigureCard label="Your device">
-            <DevicePanel />
-          </FigureCard>
-        {/if}
-        <FigureCard
-          label="The recognizer · live"
-          badge={recognizer.status === 'ready' ? `live · ${recognizer.backend}` : 'live · your browser'}
-          badgeTone="live"
-        >
-          <ModelLoader
-            audioUrl={data?.audioUrl ? import.meta.env.BASE_URL + data.audioUrl : ''}
-            {capable}
-          />
-        </FigureCard>
       {:else if s.id === 'extract' && data}
         <p>
           The labels pay off here. Group every chunk by its class and each group becomes

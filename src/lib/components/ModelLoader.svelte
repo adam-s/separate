@@ -25,7 +25,7 @@
   {#if !capable}
     <p class="note">
       Running the model live needs a desktop with WebGPU (Chrome or Edge). On this device
-      the panels above are precomputed — they cover the whole method regardless.
+      the walkthrough that follows is precomputed — it covers the whole method regardless.
     </p>
   {:else if recognizer.status === 'idle'}
     <button class="go" onclick={() => recognizer.load()}>
@@ -63,7 +63,7 @@
       </ul>
       <p class="hint">
         Live predictions — the raw AudioSet classes, computed on your device just now,
-        not read from a precomputed file like the panels above.
+        not read from a precomputed file like the panels that follow.
       </p>
     {/if}
   {:else if recognizer.status === 'error'}
