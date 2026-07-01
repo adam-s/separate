@@ -247,27 +247,42 @@
         </FigureCard>
       {:else if s.id === 'live' && data}
         <p>
-          You picked a clip. Before we take the pipeline apart stage by stage, run the
-          real thing. The recognizer is an actual neural network, and it doesn't need a
-          server: download it once — it caches in your browser — and it runs on your own
-          graphics chip through WebGPU. The audio never leaves the page, there's nothing
-          to upload and no server to call.
+          Everything on this page so far — the spectrogram, the filters, the recognizer —
+          was computed ahead of time, so the walkthrough works on any device. But the
+          recognizer is a real neural network, and there's no reason it has to run on a
+          server. You can run it right here, on your own machine. If you'd like to see what
+          that's like, this is the place.
+        </p>
+        <p>
+          The model is <strong>AST</strong>, the Audio Spectrogram Transformer — the same
+          weights the precomputed panels came from, published on
+          <a href="https://huggingface.co/Xenova/ast-finetuned-audioset-10-10-0.4593">Hugging Face</a>
+          and trained on Google's AudioSet to know 500-plus everyday sounds.
+          <a href="https://github.com/huggingface/transformers.js">transformers.js</a>
+          loads it straight into this page, and <strong>WebGPU</strong> hands the matrix
+          math to your graphics chip. It downloads once (~{recognizer.sizeMb} MB), caches
+          in your browser so the next visit is instant and works offline, and the audio
+          never leaves the page — nothing to upload, no server to call.
         </p>
         <FigureCard label="Your device">
           <DevicePanel />
         </FigureCard>
         <p>
-          So load it, then run it on the clip you picked and watch the model's own call,
-          computed on your machine the moment you ask — not read from a file like the
-          panels that follow.
+          Load it, then slide it across your clip. The per-slice scores it computes — your
+          GPU's own numbers — take over the recognizer panel further down, so the same
+          visualization runs live. You can flip back to the precomputed values anytime.
         </p>
         <FigureCard
           label="The recognizer · live"
-          badge={recognizer.status === 'ready' ? `live · ${recognizer.backend}` : 'live · your browser'}
+          badge={recognizer.winSlug === activeSlug && recognizer.status === 'ready'
+            ? `live · ${recognizer.backend}`
+            : 'live · your browser'}
           badgeTone="live"
         >
           <ModelLoader
             audioUrl={data?.audioUrl ? import.meta.env.BASE_URL + data.audioUrl : ''}
+            slug={activeSlug}
+            durationSec={data.durationSec}
             {capable}
           />
         </FigureCard>
@@ -283,8 +298,13 @@
         <FigureCard label="The cheap filters · energy + flatness" badge="precomputed">
           <FilterTraces {data} {transport} />
         </FigureCard>
-        <FigureCard label="The recognizer · per-slice class" badge="precomputed">
-          <AstRibbon {data} {transport} />
+        {@const liveFrames = recognizer.liveFramesFor(activeSlug)}
+        <FigureCard
+          label="The recognizer · per-slice class"
+          badge={liveFrames ? `live · ${recognizer.backend}` : 'precomputed'}
+          badgeTone={liveFrames ? 'live' : 'muted'}
+        >
+          <AstRibbon {data} {transport} {liveFrames} />
         </FigureCard>
         <PlaybackControls {transport} />
       {:else if s.id === 'extract' && data}
