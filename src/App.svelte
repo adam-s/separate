@@ -292,17 +292,17 @@
           move together on one timeline: the sound as a picture, the two cheap filters,
           and the recognizer's per-slice call.
         </p>
-        <FigureCard label="The sound as a picture · spectrogram" badge="precomputed">
+        <FigureCard label="The sound as a picture · spectrogram">
           <MelSpectrogram {data} {transport} />
         </FigureCard>
-        <FigureCard label="The cheap filters · energy + flatness" badge="precomputed">
+        <FigureCard label="The cheap filters · energy + flatness">
           <FilterTraces {data} {transport} />
         </FigureCard>
         {@const liveFrames = recognizer.liveFramesFor(activeSlug)}
         <FigureCard
           label="The recognizer · per-slice class"
-          badge={liveFrames ? `live · ${recognizer.backend}` : 'precomputed'}
-          badgeTone={liveFrames ? 'live' : 'muted'}
+          badge={liveFrames ? `live · ${recognizer.backend}` : undefined}
+          badgeTone="live"
         >
           <AstRibbon {data} {transport} {liveFrames} />
         </FigureCard>
