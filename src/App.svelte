@@ -80,7 +80,7 @@
 
 <main class="page">
   <Hero
-    title="Extracting Clean Mechanical Audio from Messy YouTube Data for ML Training"
+    title="Isolating the Engine Audio"
     lede="A while back I wanted to find out whether a model could listen to a car and tell you what's wrong with it. A good mechanic can often name a fault from the sound alone — a worn bearing, a misfire, a failing pump — so the question was whether software could learn the same trick."
   />
 
@@ -100,7 +100,9 @@
           mechanical problem and play the sound right there in the clip, with the bad
           part named on screen. Two minutes, one fault each. Building training labels was
           just splicing out the audio and reading the on-screen text with OCR (optical
-          character recognition), then matching the words and the picture to the sound. It worked, and it was a good
+          character recognition), then
+          <a href="https://adamsohn.com/clap/">matching the words and the picture to the sound</a>.
+          It worked, and it was a good
           way to test the idea. It was also a dead end: there are only so many tidy,
           pre-labeled clips.
         </p>
@@ -120,8 +122,27 @@
         <p>
           That cleaning step is what this post is about. It's more interesting than it
           sounds, and it runs entirely in your browser. (It's the front end of
-          <a href="https://github.com/adam-s">car-diagnosis</a>.)
+          <a href="https://github.com/adam-s/car-diagnosis">car-diagnosis</a>.)
         </p>
+        <div class="alsosee">
+          <p class="also-label mono">Also see</p>
+          <ul>
+            <li>
+              <a href="https://adamsohn.com/clap/"><strong>CLAP, visualized</strong></a>
+              — an interactive walk through the model that turns an isolated engine sound
+              into a 512-number fingerprint. It follows one recording through every step
+              of the encoder, live in your browser, then measures how well that
+              fingerprint matches plain-language descriptions.
+            </li>
+            <li>
+              <a href="https://github.com/adam-s/car-diagnosis/"><strong>car-diagnosis</strong></a>
+              — the end-to-end system this cleaning step feeds into: it scrapes fault
+              recordings off the web, cleans them, embeds them with CLAP, trains
+              classifiers on those embeddings, and serves an inference page where you drop
+              in a recording of a rattling car and it tells you what's wrong.
+            </li>
+          </ul>
+        </div>
       {:else if s.id === 'tools' && data}
         <p>
           Isolating one source from a mixture doesn't need a big model. It needs a few
@@ -314,6 +335,34 @@
     max-width: 920px;
     margin: 0 auto;
     padding: 0 var(--space-lg) var(--space-2xl);
+  }
+  .alsosee {
+    max-width: var(--measure);
+    margin: var(--space-lg) 0 0;
+  }
+  .alsosee .also-label {
+    margin: 0 0 var(--space-sm);
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: var(--text-xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-subtle);
+  }
+  .alsosee ul {
+    margin: 0;
+    padding-left: 1.1em;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+  .alsosee li {
+    color: var(--ink-muted);
+    line-height: 1.6;
+  }
+  .alsosee li strong {
+    font-weight: 600;
+    color: var(--ink);
   }
   .error {
     margin: var(--space-lg) 0;
