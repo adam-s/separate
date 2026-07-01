@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Separate — isolate the engine signal">
+  <rect width="64" height="64" rx="14" fill="#1f3a5f"/>
+  <g fill="none" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <!-- full waveform, centered on the midline (y=32) -->
+    <path stroke="#fdfcf9" d="M6 31.05 L7 31.36 L8 32 L9 32.95 L10 34.11 L11 35.29 L12 36.21 L13 36.57 L14 36.08 L15 34.55 L16 32 L17 28.68 L18 25.08 L19 21.89 L20 19.87 L21 19.67 L22 21.71 L23 25.98 L24 32 L25 38.88 L26 45.41 L27 50.33 L28 52.59 L29 51.58 L30 47.3 L31 40.38 L32 32 L33 23.62 L34 16.7 L35 12.42 L36 11.41 L37 13.67 L38 18.59 L39 25.12 L40 32 L41 38.02 L42 42.29 L43 44.33 L44 44.13 L45 42.11 L46 38.92 L47 35.32 L48 32 L49 29.45 L50 27.92 L51 27.43 L52 27.79 L53 28.71 L54 29.89 L55 31.05 L56 32 L57 32.64 L58 32.95"/>
+    <!-- the isolated engine signal: kept, highlighted -->
+    <path stroke="#3fae6a" d="M20 19.87 L21 19.67 L22 21.71 L23 25.98 L24 32 L25 38.88 L26 45.41 L27 50.33 L28 52.59 L29 51.58 L30 47.3 L31 40.38 L32 32 L33 23.62 L34 16.7 L35 12.42 L36 11.41 L37 13.67 L38 18.59 L39 25.12 L40 32 L41 38.02 L42 42.29 L43 44.33 L44 44.13"/>
+  </g>
+</svg>

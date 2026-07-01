@@ -4,13 +4,14 @@
 For each clip: excerpt it, run the Audio Spectrogram Transformer in a sliding window to
 get genuine speech / music / engine probabilities per frame (so music actually shows up,
 not just speech), compute librosa features, build spans + per-class stems, and write
-public/audio/<slug>.wav + public/data/<slug>.json + a clips.json index with link-backs.
+public/audio/<slug>.mp3 + public/data/<slug>.json + a clips.json index with link-backs.
 
 Mixes YouTube (clear faults, narration) with TikTok (background music) so the post
 visibly filters out BOTH speech and music. Run with the car-diagnosis venv:
   ~/Projects/car-diagnosis/.venv/bin/python scripts/prepare_clips.py
 """
 import json
+import subprocess
 from pathlib import Path
 
 import librosa
@@ -27,6 +28,26 @@ AUDIO = HERE / "public/audio"
 DATA = HERE / "public/data"
 # CC BY 3.0 demo music: "Dance Monster" by Kevin MacLeod (incompetech.com)
 MUSIC = HERE / "scripts/assets/dance-monster.mp3"
+
+
+def write_mp3(stem: str, y: np.ndarray, sr: int) -> None:
+    """Write mono PCM as a 64 kbps MP3 (keeps public/audio small; ~5x vs 16-bit WAV).
+
+    Plays everywhere (incl. iOS Safari) and decodes fine for the in-browser recognizer.
+    Requires ffmpeg on PATH.
+    """
+    tmp = AUDIO / f".{stem}.tmp.wav"
+    sf.write(str(tmp), y, sr)
+    try:
+        subprocess.run(
+            ["ffmpeg", "-nostdin", "-v", "error", "-y", "-i", str(tmp),
+             "-ac", "1", "-ar", str(sr), "-c:a", "libmp3lame", "-b:a", "64k",
+             str(AUDIO / f"{stem}.mp3")],
+            check=True,
+        )
+    finally:
+        tmp.unlink(missing_ok=True)
+
 
 # (slug, source, id, wav_rel, title, region)
 CLIPS = [
@@ -136,7 +157,7 @@ def process(slug, source, vid, wav_rel, title, region):
     if np.max(np.abs(y)) > 0:
         y = (y / np.max(np.abs(y)) * 0.95).astype(np.float32)
     dur = len(y) / SR
-    sf.write(str(AUDIO / f"{slug}.wav"), y, SR)
+    write_mp3(slug, y, SR)
 
     wins = ast_windows(y, dur)
     wt = np.array([w[0] for w in wins])
@@ -208,8 +229,8 @@ def process(slug, source, vid, wav_rel, title, region):
         if not parts:
             continue
         audio = np.concatenate(parts)
-        sf.write(str(AUDIO / f"{slug}-{label}.wav"), audio, SR)
-        stems.append({"label": label, "classId": CID[label], "audioUrl": f"audio/{slug}-{label}.wav",
+        write_mp3(f"{slug}-{label}", audio, SR)
+        stems.append({"label": label, "classId": CID[label], "audioUrl": f"audio/{slug}-{label}.mp3",
                       "durationSec": round(len(audio) / SR, 3), "chunks": chunk_map})
 
     url = (f"https://www.youtube.com/watch?v={vid}" if source in ("youtube", "mix")
@@ -218,7 +239,7 @@ def process(slug, source, vid, wav_rel, title, region):
     counts = {k: round(sum(s["endSec"] - s["startSec"] for s in spans if s["label"] == k) / dur * 100)
               for k in ("speech", "music", "target")}
     data = {
-        "clip": slug, "durationSec": round(dur, 3), "sampleRate": SR, "audioUrl": f"audio/{slug}.wav",
+        "clip": slug, "durationSec": round(dur, 3), "sampleRate": SR, "audioUrl": f"audio/{slug}.mp3",
         "classes": [{"id": 1, "label": "speech"}, {"id": 2, "label": "music"}, {"id": 3, "label": "target"}],
         "waveformPeaks": peaks, "melSpectrogram": {"nMels": n_mels, "hop": hop, "frames": frames_mel},
         "frames": frames, "spans": spans, "stems": stems,
