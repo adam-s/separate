@@ -47,12 +47,16 @@
     return () => ro.disconnect();
   });
 
-  // Render the spectrogram once per size/data change to an offscreen buffer.
-  let buffer: HTMLCanvasElement | null = null;
+  // Redraw the spectrogram whenever the clip data or size changes (NOT per playback
+  // frame — the moving playhead is a separate overlay). Reading data.melSpectrogram
+  // and `width` here makes this effect re-run on every clip switch.
   $effect(() => {
+    if (!canvas) return;
     const frames = data.melSpectrogram.frames;
     const cols = frames.length;
     const rows = data.melSpectrogram.nMels;
+
+    // Build at native mel resolution in an offscreen buffer...
     const off = document.createElement('canvas');
     off.width = cols;
     off.height = rows;
@@ -71,12 +75,8 @@
       }
     }
     octx.putImageData(img, 0, 0);
-    buffer = off;
-  });
 
-  // Composite buffer (scaled) once per size/data change — NOT per playback frame.
-  $effect(() => {
-    if (!canvas || !buffer) return;
+    // ...then scale it onto the visible canvas.
     const dpr = window.devicePixelRatio || 1;
     const w = width;
     const h = HEIGHT;
@@ -88,7 +88,7 @@
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.imageSmoothingEnabled = true;
     ctx.clearRect(0, 0, w, h);
-    ctx.drawImage(buffer, 0, 0, w, h);
+    ctx.drawImage(off, 0, 0, w, h);
   });
 </script>
 
