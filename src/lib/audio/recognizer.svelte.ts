@@ -5,7 +5,14 @@
  * so it stays out of the initial bundle until the reader opts in.
  */
 const MODEL = 'Xenova/ast-finetuned-audioset-10-10-0.4593';
-const SIZE_MB = 90;
+// ~90 MB model weights + ~22 MB ONNX Runtime wasm on first load.
+const SIZE_MB = 112;
+
+// Serve the ONNX Runtime wasm from jsDelivr instead of self-hosting the ~22 MB blob.
+// The version MUST match the onnxruntime-web that @huggingface/transformers resolves to
+// (check `node_modules/onnxruntime-web/package.json`); a mismatch breaks inference.
+const ORT_VERSION = '1.26.0-dev.20260416-b7804b056c';
+const ORT_WASM_CDN = `https://cdn.jsdelivr.net/npm/onnxruntime-web@${ORT_VERSION}/dist/`;
 
 type Status = 'idle' | 'loading' | 'ready' | 'error';
 type Clf = (url: string, opts?: { top_k?: number }) => Promise<{ label: string; score: number }[]>;
@@ -31,6 +38,7 @@ export class Recognizer {
     try {
       const TJS = await import('@huggingface/transformers');
       TJS.env.allowLocalModels = false;
+      if (TJS.env.backends?.onnx?.wasm) TJS.env.backends.onnx.wasm.wasmPaths = ORT_WASM_CDN;
       const cb = (e: { status?: string; file?: string; loaded?: number; total?: number }) => {
         if (!e.file) return;
         this.files = { ...this.files, [e.file]: { loaded: e.loaded ?? 0, total: e.total ?? 0 } };
