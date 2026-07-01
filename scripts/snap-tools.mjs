@@ -1,0 +1,15 @@
+import { chromium } from '@playwright/test';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+const OUT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '.snapshots');
+const b = await chromium.launch({ headless: true });
+const p = await b.newPage({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 2 });
+await p.goto('http://localhost:5174/', { waitUntil: 'networkidle' });
+await p.evaluate(() => document.fonts.ready);
+await p.waitForTimeout(500);
+const el = await p.$('footer');
+if (el) await el.scrollIntoViewIfNeeded();
+await p.waitForTimeout(500);
+await p.screenshot({ path: resolve(OUT, 'footer-closeup.png') });
+await b.close();
+console.log('saved footer-closeup.png');
