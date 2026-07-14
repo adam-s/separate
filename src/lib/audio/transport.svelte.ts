@@ -33,6 +33,14 @@ export class Transport {
   #audio: HTMLAudioElement | null = null;
   #stopAt: number | null = null;
 
+  // Wall-clock fallback so the walkthrough animates even when audio never plays
+  // (autoplay blocked, decode/codec failure, muted device, an extension eating
+  // media). The clock free-runs from these baselines and snaps to the audio
+  // element only while it is genuinely progressing — see #tick.
+  #clockBase = 0;
+  #tBase = 0;
+  #lastAudioTime = -1;
+
   // one shared analyser over the single audio element
   #ctx: AudioContext | null = null;
   #analyser: AnalyserNode | null = null;
@@ -102,6 +110,7 @@ export class Transport {
     this.#stopAt = null;
     if (this.t >= this.duration - 0.01) this.seek(0);
     this.playing = true;
+    this.#resetClock(this.t);
     if (this.#audio) {
       this.#audio.currentTime = this.t;
       void this.#audio.play().catch(() => {});
@@ -118,6 +127,7 @@ export class Transport {
     this.seek(start);
     this.#stopAt = end;
     this.playing = true;
+    this.#resetClock(start);
     if (this.#audio) {
       this.#audio.currentTime = start;
       void this.#audio.play().catch(() => {});
@@ -135,18 +145,38 @@ export class Transport {
   seek(t: number) {
     const clamped = Math.max(0, Math.min(this.duration, t));
     this.t = clamped;
+    this.#resetClock(clamped);
     if (this.#audio) this.#audio.currentTime = clamped;
   }
 
+  /** Re-anchor the wall-clock fallback so it free-runs from position `t`. */
+  #resetClock(t: number) {
+    this.#tBase = t;
+    this.#clockBase = typeof performance !== 'undefined' ? performance.now() : 0;
+    this.#lastAudioTime = -1;
+  }
+
   #tick = () => {
-    if (this.#audio) this.t = this.#audio.currentTime;
+    const now = typeof performance !== 'undefined' ? performance.now() : this.#clockBase;
+    const a = this.#audio;
+    // Trust the audio element only while it is actually advancing; otherwise the
+    // clock free-runs on wall time so the animation never stalls at 0:00.
+    const audioLive = !!a && !a.paused && a.readyState >= 2 && a.currentTime > this.#lastAudioTime;
+    if (audioLive) {
+      this.t = a!.currentTime;
+      this.#lastAudioTime = a!.currentTime;
+      this.#tBase = a!.currentTime;
+      this.#clockBase = now;
+    } else {
+      this.t = Math.min(this.duration, this.#tBase + (now - this.#clockBase) / 1000);
+    }
     this.frame++;
     if (this.#stopAt != null && this.t >= this.#stopAt) {
       this.#stopAt = null;
       this.pause();
       return;
     }
-    if (this.t >= this.duration - 0.01 && !this.#audio) {
+    if (this.t >= this.duration - 0.01) {
       this.pause();
       return;
     }
