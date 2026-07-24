@@ -118,7 +118,7 @@
               <a href="https://adamsohn.com/clap/"><strong>CLAP, visualized</strong></a>
               — an interactive walk through the model that turns an isolated engine sound
               into a 512-number fingerprint. It follows one recording through every step
-              of the encoder, live in your browser, then measures how well that
+              of the encoder, then measures how well that
               fingerprint matches plain-language descriptions.
             </li>
             <li>
